@@ -80,13 +80,15 @@ export default class App extends Component {
       status = "Next player: " + (this.state.isXNext ? "X" : "O");
     }
     return (
-      <div>
-        <h1>{status}</h1>
+      <div style={{ display: "flex" }}>
         <Board
           squareClicked={this.squareClicked}
           squareList={current.squareList}
         />
-        <ol>{moveList}</ol>
+        <div>
+          <h1>{status}</h1>
+          <ol>{moveList}</ol>
+        </div>
       </div>
     );
   }
