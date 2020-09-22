@@ -8,11 +8,12 @@ export default class App extends Component {
     this.state = {
       history: [{ squareList: Array(9).fill(null) }],
       isXNext: true,
+      stepNumber: 0,
     };
   }
 
   squareClicked = (id) => {
-    const history = this.state.history;
+    const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
     const array = current.squareList.slice();
     if (array[id] || this.calculateWinner(array)) {
@@ -22,6 +23,7 @@ export default class App extends Component {
     this.setState({
       history: history.concat([{ squareList: [...array] }]),
       isXNext: !this.state.isXNext,
+      stepNumber: history.length,
     });
     console.log(history);
   };
@@ -50,11 +52,28 @@ export default class App extends Component {
     return null;
   };
 
+  goToMove = (moveKey) => {
+    this.setState({
+      stepNumber: moveKey,
+      isXNext: moveKey % 2 === 0,
+    });
+  };
+
   render() {
     const history = this.state.history;
-    const current = history[history.length - 1];
+    const current = history[this.state.stepNumber];
     let status = "Next player: " + (this.state.isXNext ? "X" : "O");
     const winner = this.calculateWinner(current.squareList);
+
+    const moveList = history.map((step, moveKey) => {
+      const moveText = moveKey ? "Move #" + moveKey : "Start of game";
+      return (
+        <li key={moveKey}>
+          <button onClick={() => this.goToMove(moveKey)}>{moveText}</button>
+        </li>
+      );
+    });
+
     if (winner) {
       status = "Winner: " + winner;
     } else {
@@ -67,6 +86,7 @@ export default class App extends Component {
           squareClicked={this.squareClicked}
           squareList={current.squareList}
         />
+        <ol>{moveList}</ol>
       </div>
     );
   }
