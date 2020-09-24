@@ -1,5 +1,8 @@
 import React, { Component } from "react";
 import Board from "./components/board";
+import FacebookLogin from "react-facebook-login";
+
+const apikey = process.env.REACT_APP_APIKEY;
 
 export default class App extends Component {
   constructor(props) {
@@ -9,6 +12,8 @@ export default class App extends Component {
       history: [{ squareList: Array(9).fill(null) }],
       isXNext: true,
       stepNumber: 0,
+      username: "unknown",
+      startTime: Date.now(),
     };
   }
 
@@ -59,11 +64,41 @@ export default class App extends Component {
     });
   };
 
+  postData = async (score) => {
+    let data = new URLSearchParams();
+    console.log("data/username", this.state.username, score);
+
+    data.append("player", this.state.username);
+    data.append("score", score);
+    const url = `http://ftw-highscores.herokuapp.com/tictactoe-dev`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: data.toString(),
+      json: true,
+    });
+    console.log("final response", response);
+  };
+
+  getData = async () => {
+    const url = `http://ftw-highscores.herokuapp.com/tictactoe-dev`;
+    const response = await fetch(url);
+    const data = await response.json();
+    console.log("getData", data);
+  };
+
+  responseFacebook = (response) => {
+    console.log("facebook", response);
+  };
+
   render() {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
     let status = "Next player: " + (this.state.isXNext ? "X" : "O");
     const winner = this.calculateWinner(current.squareList);
+    let facebookLogin = "";
 
     const moveList = history.map((step, moveKey) => {
       const moveText = moveKey ? "Move #" + moveKey : "Start of game";
@@ -79,6 +114,31 @@ export default class App extends Component {
     } else {
       status = "Next player: " + (this.state.isXNext ? "X" : "O");
     }
+
+    if (winner) {
+      let score = Math.floor((Date.now() - this.state.startTime) / 1000);
+      // this.postData(score);
+      console.log("data pushed", score);
+    }
+
+    if (this.state.username !== "unknown") {
+      facebookLogin = <h3>Username: {this.state.username}</h3>;
+    } else {
+      facebookLogin = (
+        <FacebookLogin
+          autoLoad={true}
+          appId={apikey}
+          fields="name,email,picture"
+          callback={(resp) => {
+            this.responseFacebook(resp);
+            this.setState({ username: resp.name });
+            let name = this.state.username;
+            console.log("name", name);
+          }}
+        />
+      );
+    }
+
     return (
       <div style={{ display: "flex" }}>
         <Board
@@ -86,8 +146,11 @@ export default class App extends Component {
           squareList={current.squareList}
         />
         <div>
+          <div>{facebookLogin}</div>
           <h1>{status}</h1>
           <ol>{moveList}</ol>
+          <button onClick={() => this.postData()}>Post Data</button>
+          <button onClick={() => this.getData()}>See Data</button>
         </div>
       </div>
     );
