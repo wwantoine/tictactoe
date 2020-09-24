@@ -14,6 +14,7 @@ export default class App extends Component {
       stepNumber: 0,
       username: "unknown",
       startTime: Date.now(),
+      topScores: [],
     };
   }
 
@@ -70,7 +71,7 @@ export default class App extends Component {
 
     data.append("player", this.state.username);
     data.append("score", score);
-    const url = `http://ftw-highscores.herokuapp.com/tictactoe-dev`;
+    const url = `https://ftw-highscores.herokuapp.com/tictactoe-dev`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -83,10 +84,11 @@ export default class App extends Component {
   };
 
   getData = async () => {
-    const url = `http://ftw-highscores.herokuapp.com/tictactoe-dev`;
+    const url = `https://ftw-highscores.herokuapp.com/tictactoe-dev`;
     const response = await fetch(url);
     const data = await response.json();
     console.log("getData", data);
+    this.setState({ ...this.state, topScores: data.items });
   };
 
   responseFacebook = (response) => {
@@ -151,6 +153,16 @@ export default class App extends Component {
           <ol>{moveList}</ol>
           <button onClick={() => this.postData()}>Post Data</button>
           <button onClick={() => this.getData()}>See Data</button>
+          <div>
+            <h2>Top 10 Scores</h2>
+            <ol>
+              {this.state.topScores.map((item) => (
+                <li>
+                  {item.player}:{item.score}
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
       </div>
     );
